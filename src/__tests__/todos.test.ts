@@ -91,6 +91,16 @@ describe('DELETE /todos/:id', () => {
     expect(res.body).toHaveProperty('error');
   });
 
+  it('повертає 400 якщо id <= 0', async () => {
+    const resZero = await request(app).delete('/todos/0');
+    expect(resZero.status).toBe(400);
+    expect(resZero.body).toHaveProperty('error');
+
+    const resNeg = await request(app).delete('/todos/-1');
+    expect(resNeg.status).toBe(400);
+    expect(resNeg.body).toHaveProperty('error');
+  });
+
   it('видаляє лише вказану задачу, решта залишається', async () => {
     const a = await request(app).post('/todos').send({ title: 'A' });
     const b = await request(app).post('/todos').send({ title: 'B' });

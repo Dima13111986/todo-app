@@ -45,7 +45,7 @@ app.post('/todos', (req: Request, res: Response) => {
 app.delete('/todos/:id', (req: Request, res: Response) => {
   const id = parseInt(String(req.params.id), 10);
 
-  if (isNaN(id)) {
+  if (isNaN(id) || id <= 0) {
     res.status(400).json({ error: 'Invalid ID' });
     return;
   }
