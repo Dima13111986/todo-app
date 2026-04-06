@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response } from "express";
 
 export interface Todo {
   id: number;
@@ -18,15 +18,32 @@ const app = express();
 app.use(express.json());
 
 // GET /todos — список задач
-app.get('/todos', (_req: Request, res: Response) => {
+app.get("/todos", (req: Request, res: Response) => {
+  const { status } = req.query;
+
+  if (status === "active") {
+    res.json(todos.filter((t) => !t.completed));
+    return;
+  }
+  if (status === "completed") {
+    res.json(todos.filter((t) => t.completed));
+    return;
+  }
+  if (status !== undefined && status !== "all") {
+    res
+      .status(400)
+      .json({ error: "Invalid status. Use: all, active, completed" });
+    return;
+  }
+
   res.json(todos);
 });
 
 // POST /todos — додати задачу
-app.post('/todos', (req: Request, res: Response) => {
+app.post("/todos", (req: Request, res: Response) => {
   const { title } = req.body;
 
-  if (!title || typeof title !== 'string' || title.trim() === '') {
+  if (!title || typeof title !== "string" || title.trim() === "") {
     res.status(400).json({ error: 'Field "title" is required' });
     return;
   }
@@ -42,11 +59,11 @@ app.post('/todos', (req: Request, res: Response) => {
 });
 
 // DELETE /todos/:id — видалити задачу
-app.delete('/todos/:id', (req: Request, res: Response) => {
+app.delete("/todos/:id", (req: Request, res: Response) => {
   const id = parseInt(String(req.params.id), 10);
 
   if (isNaN(id) || id <= 0) {
-    res.status(400).json({ error: 'Invalid ID' });
+    res.status(400).json({ error: "Invalid ID" });
     return;
   }
 
