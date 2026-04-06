@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app, { resetStore } from '../app';
+import app, { resetStore, todos } from '../app';
 
 beforeEach(() => {
   resetStore();
@@ -111,5 +111,46 @@ describe('DELETE /todos/:id', () => {
     const list = await request(app).get('/todos');
     expect(list.body).toHaveLength(2);
     expect(list.body.map((t: { id: number }) => t.id)).toEqual([a.body.id, c.body.id]);
+  });
+});
+
+describe('GET /todos?status=', () => {
+  beforeEach(async () => {
+    await request(app).post('/todos').send({ title: 'Active task' });
+    await request(app).post('/todos').send({ title: 'Completed task' });
+    // Mark second todo as completed directly via the exported store
+    todos[1].completed = true;
+  });
+
+  it('повертає всі задачі без параметра', async () => {
+    const res = await request(app).get('/todos');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+  });
+
+  it('?status=all повертає всі задачі', async () => {
+    const res = await request(app).get('/todos?status=all');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+  });
+
+  it('?status=active повертає лише незавершені задачі', async () => {
+    const res = await request(app).get('/todos?status=active');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ title: 'Active task', completed: false });
+  });
+
+  it('?status=completed повертає лише завершені задачі', async () => {
+    const res = await request(app).get('/todos?status=completed');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ title: 'Completed task', completed: true });
+  });
+
+  it('?status=invalid повертає 400', async () => {
+    const res = await request(app).get('/todos?status=invalid');
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
   });
 });
